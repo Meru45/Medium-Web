@@ -19,11 +19,11 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
         `${BACKEND_URL}/api/v1/user/${type === "signup" ? "signup" : "signin"}`,
         postInputs,
       );
-      const token = res.data;
+      const token = res.data.jwt;
       localStorage.setItem("token", token);
       navigate("/blogs");
     } catch (error) {
-      //alert user
+      alert("Error while Signing up");
     }
   };
 

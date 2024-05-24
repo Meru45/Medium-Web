@@ -40,7 +40,8 @@ userRouter.post("/signup", async (c) => {
     const token = await sign(payload, c.env.JWT_SECRET);
     return c.json({ jwt: token });
   } catch (error) {
-    return c.status(403);
+    c.status(403);
+    return c.json({ success: false, msg: "Error while Signing Up" });
   }
 });
 
@@ -75,8 +76,8 @@ userRouter.post("/signin", async (c) => {
       return c.json({ msg: "Invalid password" });
     }
   } catch (error) {
-    c.status(500);
-    return c.json({ msg: "Database error" });
+    c.status(403);
+    return c.json({ success: false, msg: "Error while Signing In" });
   }
 });
 
