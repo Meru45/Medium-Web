@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { sign, verify } from "hono/jwt";
 import { PrismaClient } from "@prisma/client/edge";
 import { withAccelerate } from "@prisma/extension-accelerate";
+import versionWrapper from "./apiVersionWrapper";
 
 const app = new Hono<{
   Bindings: {
@@ -25,7 +26,7 @@ app.use("/*", async (c, next) => {
   }
 });
 
-app.use("/app/v1/blog/*", async (c, next) => {
+app.use("/api/v1/blog/*", async (c, next) => {
   //in hono this syntax is used to add middleware on all routes of /api/v1/blog we use * after that
   //get the auth header
   const authHeader = c.req.header("authorization");
@@ -51,68 +52,6 @@ app.use("/app/v1/blog/*", async (c, next) => {
   }
 });
 
-app.post("/api/v1/signup", async (c) => {
-  const body = await c.req.json();
-  const User = c.get("user");
-  try {
-    const newUser = await User.create({
-      data: {
-        email: body.email,
-        name: body.name,
-        password: body.password,
-      },
-    });
-
-    const payload = {
-      id: newUser.id,
-      exp: Math.floor(Date.now() / 1000) + 3600 * 24 * 15,
-    };
-
-    const token = await sign(payload, c.env.JWT_SECRET);
-    return c.json({ jwt: token });
-  } catch (error) {
-    return c.status(403);
-  }
-});
-
-app.post("/api/v1/signin", async (c) => {
-  const body = await c.req.json();
-  const User = c.get("user");
-  try {
-    const user = await User.findFirst({
-      where: { email: body.email },
-    });
-
-    if (!user) {
-      c.status(404);
-      return c.json({ msg: "User does not exists" });
-    }
-    if (user.password == body.password) {
-      const payload = {
-        id: user.id,
-        exp: Math.floor(Date.now() / 1000) + 3600 * 24 * 15,
-      };
-
-      const token = await sign(payload, c.env.JWT_SECRET);
-      return c.json({ jwt: token });
-    } else {
-      c.status(401);
-      return c.json({ msg: "Invalid password" });
-    }
-  } catch (error) {
-    c.status(500);
-    return c.json({ msg: "Database error" });
-  }
-});
-
-app.post("/api/v1/blog", (c) => {
-  return c.json({ msg: "this is the blog route" });
-});
-app.put("/api/v1/blog", (c) => {
-  return c.json({ msg: "this is the blog route" });
-});
-app.get("/api/v1/blog/:id", (c) => {
-  return c.json({ msg: "this is the blog route" });
-});
+app.route("/api/v1", versionWrapper);
 
 export default app;
