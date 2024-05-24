@@ -1,6 +1,16 @@
 import { Hono } from "hono";
 import authMiddleware from "../middlewares/authMiddleware";
-const postRouter = new Hono();
+const postRouter = new Hono<{
+  Bindings: {
+    JWT_SECRET: string;
+  };
+
+  Variables: {
+    user: any;
+    post: any;
+    userId: string;
+  };
+}>();
 
 postRouter.use("/*", authMiddleware);
 postRouter.post("/", async (c) => {

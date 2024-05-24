@@ -6,6 +6,12 @@ const userRouter = new Hono<{
   Bindings: {
     JWT_SECRET: string;
   };
+
+  Variables: {
+    user: any;
+    post: any;
+    userId: string;
+  };
 }>();
 
 userRouter.post("/signup", async (c) => {
