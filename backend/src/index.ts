@@ -1,8 +1,8 @@
 import { Hono } from "hono";
-import { sign, verify } from "hono/jwt";
 import { PrismaClient } from "@prisma/client/edge";
 import { withAccelerate } from "@prisma/extension-accelerate";
 import versionWrapper from "./apiVersionWrapper";
+import authMiddleware from "./middlewares/authMiddleware";
 
 const app = new Hono<{
   Bindings: {
@@ -26,31 +26,7 @@ app.use("/*", async (c, next) => {
   }
 });
 
-app.use("/api/v1/blog/*", async (c, next) => {
-  //in hono this syntax is used to add middleware on all routes of /api/v1/blog we use * after that
-  //get the auth header
-  const authHeader = c.req.header("authorization");
-  if (!authHeader) {
-    c.status(400);
-    return c.json({ msg: "No auth header" });
-  }
-  if (!authHeader.startsWith("Bearer")) {
-    c.status(400);
-    return c.json({ msg: "You have to send a 'Bearer' token" });
-  }
-
-  //extracting the token from authHeader
-  const token = authHeader.split(" ")[1];
-
-  //verigy header
-  const decoded = await verify(token, c.env.JWT_SECRET);
-  if (!decoded.id) {
-    c.status(403);
-    return c.json({ msg: "unauthorized" });
-  } else {
-    await next();
-  }
-});
+app.use("/api/v1/blog/*", authMiddleware);
 
 app.route("/api/v1", versionWrapper);
 
