@@ -1,6 +1,6 @@
 import { Hono } from "hono";
-
 import { sign } from "hono/jwt";
+import { signupInput, signinInput } from "@meru_2802/blogs-common";
 
 const userRouter = new Hono<{
   Bindings: {
@@ -16,6 +16,12 @@ const userRouter = new Hono<{
 
 userRouter.post("/signup", async (c) => {
   const body = await c.req.json();
+  const dataCheck = await signupInput.safeParseAsync(body);
+  if (!dataCheck.success) {
+    c.status(400);
+    return c.json({ msg: "Wrong signup inputs" });
+  }
+
   const User = c.get("user");
   try {
     const newUser = await User.create({
@@ -40,6 +46,12 @@ userRouter.post("/signup", async (c) => {
 
 userRouter.post("/signin", async (c) => {
   const body = await c.req.json();
+  const { success } = await signinInput.safeParseAsync(body);
+  if (!success) {
+    c.status(400);
+    return c.json({ msg: "Wrong signup inputs" });
+  }
+
   const User = c.get("user");
   try {
     const user = await User.findFirst({

@@ -17,14 +17,19 @@ async function authMiddleware(c: Context, next: Next) {
   //extracting the token from authHeader
   const token = authHeader.split(" ")[1];
 
-  //verigy header
-  const decoded = await verify(token, c.env.JWT_SECRET);
-  if (!decoded.id) {
+  //verify jwt
+  try {
+    const decoded = await verify(token, c.env.JWT_SECRET);
+    if (!decoded.id) {
+      c.status(403);
+      return c.json({ msg: "unauthorized" });
+    } else {
+      c.set("userId", decoded.id);
+      await next();
+    }
+  } catch (error) {
     c.status(403);
-    return c.json({ msg: "unauthorized" });
-  } else {
-    c.set("userId", decoded.id);
-    await next();
+    return c.json({ msg: "Jwt did not verify" });
   }
 }
 

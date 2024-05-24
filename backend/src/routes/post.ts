@@ -1,5 +1,7 @@
 import { Hono } from "hono";
+import { createBlogInput, updateBlogInput } from "@meru_2802/blogs-common";
 import authMiddleware from "../middlewares/authMiddleware";
+
 const postRouter = new Hono<{
   Bindings: {
     JWT_SECRET: string;
@@ -13,12 +15,15 @@ const postRouter = new Hono<{
 }>();
 
 postRouter.use("/*", authMiddleware);
+
 postRouter.post("/", async (c) => {
   const body = await c.req.json();
-  if (!body.title || !body.content) {
+  const { success } = await createBlogInput.safeParseAsync(body);
+  if (!success) {
     c.status(400);
-    return c.json({ msg: "Title/Content cannot be empty" });
+    return c.json({ msg: "Incorrect inputs" });
   }
+
   const Post = c.get("post");
   const userId = c.get("userId");
   try {
@@ -43,11 +48,19 @@ postRouter.put("/:id", async (c) => {
     c.status(400);
     return c.json({ msg: "Please put the id of the post in the param" });
   }
+
   const body = await c.req.json();
+  const { success } = await updateBlogInput.safeParseAsync(body);
+  if (!success) {
+    c.status(400);
+    return c.json({ msg: "Incorrect inputs" });
+  }
+
   if (!body.title || !body.content) {
     c.status(400);
     return c.json({ msg: "Title/Content cannot be empty" });
   }
+
   const Post = c.get("post");
   const userId = c.get("userId");
 
@@ -71,8 +84,13 @@ postRouter.put("/:id", async (c) => {
   }
 });
 
-postRouter.get("/:id", async (c) => {
+postRouter.get("/getpost/:id", async (c) => {
   const id = c.req.param("id");
+  if (!id) {
+    c.status(400);
+    return c.json({ msg: "Please put the id of the post in the param" });
+  }
+
   const Post = c.get("post");
   try {
     const post = await Post.findFirst({
@@ -80,7 +98,7 @@ postRouter.get("/:id", async (c) => {
         id: id,
       },
     });
-    c.status(400);
+    c.status(200);
     return c.json({ post });
   } catch (error) {
     c.status(500);
@@ -91,13 +109,15 @@ postRouter.get("/:id", async (c) => {
 });
 
 //TODO: Add pagination
-postRouter.get("/", async (c) => {
+postRouter.get("/bulk", async (c) => {
   const Post = c.get("post");
-  console.log(Post);
+
   try {
-    const posts = await Post.findMany({});
-    c.status(400);
-    return c.json({ posts });
+    const posts = await Post.findMany({
+      where: {},
+    });
+    c.status(200);
+    return c.json({ posts: posts });
   } catch (error) {
     c.status(500);
     return c.json({ msg: "Error occured while fetching posts" });

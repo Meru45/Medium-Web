@@ -1,7 +1,8 @@
 import { Hono } from "hono";
-import { Prisma, PrismaClient } from "@prisma/client/edge";
+import { PrismaClient } from "@prisma/client/edge";
 import { withAccelerate } from "@prisma/extension-accelerate";
 import versionWrapper from "./apiVersionWrapper";
+import { cors } from "hono/cors";
 
 const app = new Hono<{
   Bindings: {
@@ -30,6 +31,8 @@ app.use("/*", async (c, next) => {
     c.json({ msg: "Error occured while connecting to the database" });
   }
 });
+
+app.use("/*", cors());
 
 app.route("/api/v1", versionWrapper);
 
