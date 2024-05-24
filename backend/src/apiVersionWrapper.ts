@@ -5,6 +5,6 @@ import postRouter from "./routes/post";
 const versionWrapper = new Hono();
 
 versionWrapper.route("/user", userRouter);
-versionWrapper.route("/blog", postRouter);
+versionWrapper.route("/post", postRouter);
 
 export default versionWrapper;

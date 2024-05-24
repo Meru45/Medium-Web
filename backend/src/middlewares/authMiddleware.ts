@@ -23,6 +23,7 @@ async function authMiddleware(c: Context, next: Next) {
     c.status(403);
     return c.json({ msg: "unauthorized" });
   } else {
+    c.set("userId", decoded.id);
     await next();
   }
 }
