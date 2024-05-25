@@ -24,6 +24,7 @@ userRouter.post("/signup", async (c) => {
 
   const User = c.get("user");
   try {
+    //TODO: Add password hashing in the database
     const newUser = await User.create({
       data: {
         email: body.email,
@@ -63,6 +64,7 @@ userRouter.post("/signin", async (c) => {
       c.status(404);
       return c.json({ msg: "User does not exists" });
     }
+    //TODO: Compare password using bcrypt like library
     if (user.password == body.password) {
       const payload = {
         id: user.id,

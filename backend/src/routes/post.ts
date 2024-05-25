@@ -16,6 +16,8 @@ const postRouter = new Hono<{
 
 postRouter.use("/*", authMiddleware);
 
+//TODO: Add publish end point
+
 postRouter.post("/", async (c) => {
   const body = await c.req.json();
   const { success } = await createBlogInput.safeParseAsync(body);
@@ -95,7 +97,17 @@ postRouter.get("/getpost/:id", async (c) => {
   try {
     const post = await Post.findFirst({
       where: {
-        id: id,
+        id: parseInt(id),
+      },
+      select: {
+        title: true,
+        content: true,
+        id: true,
+        author: {
+          select: {
+            name: true,
+          },
+        },
       },
     });
     c.status(200);
@@ -115,6 +127,16 @@ postRouter.get("/bulk", async (c) => {
   try {
     const posts = await Post.findMany({
       where: {},
+      select: {
+        content: true,
+        title: true,
+        id: true,
+        author: {
+          select: {
+            name: true,
+          },
+        },
+      },
     });
     c.status(200);
     return c.json({ posts: posts });
